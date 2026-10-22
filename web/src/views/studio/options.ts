@@ -28,7 +28,10 @@ export const SIZES: Option<number>[] = [
   { value: 512, label: 'Small' },
   { value: 640, label: 'Medium' },
   { value: 800, label: 'Large' },
-  { value: 1024, label: 'Biggest' },
+  { value: 1024, label: 'Extra large' },
+  { value: 1280, label: 'HD' },
+  { value: 1600, label: 'HD+' },
+  { value: 1920, label: 'Full HD' },
 ];
 
 export const ON_OFF: Option<'off' | 'on'>[] = [

@@ -22,7 +22,7 @@ local function setOf(values)
     return set
 end
 
-studioSettings.WIDTHS = setOf({ 512, 640, 800, 1024 })
+studioSettings.WIDTHS = setOf({ 512, 640, 800, 1024, 1280, 1600, 1920 })
 studioSettings.WEATHERS = setOf({ 'sunny', 'clear', 'clouds', 'overcast', 'foggy', 'rain' })
 studioSettings.PLACES = setOf({ 'green', 'here', 'garage', 'saved' })
 studioSettings.GLOW_FROM = setOf({ 'around', 'left', 'right', 'behind', 'above' })

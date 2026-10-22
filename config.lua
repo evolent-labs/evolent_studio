@@ -16,7 +16,7 @@ return {
         Width = 800,
     },
 
-    MaxLayerKB = 150,
+    MaxLayerKB = 800,
 
     Garages = {
         { id = 'garage2', name = '2 car garage', x = 173.2, y = -1004.9, z = -99.0, h = 0.0 },
