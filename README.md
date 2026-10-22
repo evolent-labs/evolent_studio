@@ -2,9 +2,18 @@
 
 <h1 align="center">Evolent Studio</h1>
 
-A photo studio for FiveM. Admins take clean, cut-out pictures in game, and other resources show them in their menus, phone apps and websites.
+A photo studio for FiveM. Admins take cut-out pictures of vehicles in game, and other resources show them in their menus, phone apps and websites.
 
 Admins photograph each vehicle model once, and the photo shows every owner's own paint. Each car looks like the one the player owns, without a picture for every colour. Players never send pictures, so they cannot fake them, and every photo is the same quality.
+
+## What it's for
+
+Vanilla image packs leave out addon cars, show every car in one colour and come in mixed styles. Making pictures by hand takes a screenshot and an edit per model. The studio photographs every model in one queue run with the same camera, light and frame.
+
+- **The player's own car.** Garages, impounds, phone apps and MDT lookups show the car in the owner's paint.
+- **Catalogues.** Dealerships, rentals, job vehicles and boosting contracts get a photo of every model, addon cars included.
+- **Outside the game.** Uploads give every photo a link for your website, store or Discord.
+- **Branded pictures.** Saved styles add your background, texts and logo for update posts and adverts.
 
 ## Features
 
