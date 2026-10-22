@@ -29,7 +29,7 @@ export type PlacesMessage = { type: 'places'; places?: SavedPlace[]; added?: str
 export type NuiMessage =
   | OpenMessage
   | { type: 'close' }
-  | { type: 'shooting'; on?: boolean; layer?: number; model?: string }
+  | { type: 'shooting'; on?: boolean; layer?: number; steps?: number; model?: string }
   | { type: 'vehicles'; list?: Vehicle[] }
   | RowMessage
   | { type: 'upload'; upload?: Upload }

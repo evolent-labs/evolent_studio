@@ -21,7 +21,7 @@
       <b>{fleet.nameOf(run.current)}</b>
       <div class="chips">
         <span class="chip">{run.current || ''}</span>
-        <span class="chip dim2">Layer {run.layer || 1} of 3</span>
+        <span class="chip dim2">Layer {run.layer || 1} of {run.steps || 3}</span>
         <span class="chip dim2">{LAYERS[(run.layer || 1) - 1]}</span>
       </div>
       <div class="prog">

@@ -9,6 +9,7 @@
     drawImages,
     drawShadow,
     drawTexts,
+    boxRect,
     edgeOf,
     frameFor,
     groundAt,
@@ -231,8 +232,6 @@
     let ground: Point[] = [];
     let paintedAspect = 0;
     let paintedAt = 0;
-    let inBox: Rect | null = null;
-    let inBoxModel = '';
     let car: Rect | null = null;
     let painted = '';
     let paintedW = 0;
@@ -240,6 +239,7 @@
     let frame = 0;
     let tick = 0;
     let usual = 0;
+    let usualModel = '';
     let odd = 0;
     let outlineData: ImageData | null = null;
     let shown: Rect | null = null;
@@ -288,13 +288,18 @@
       const keep = keepCar(grid, MASK_W, maskH, [only[0], 1 - only[3], only[2], 1 - only[1]]);
       let count = 0;
       for (let i = 0; i < n; i++) if (grid[i] && keep[i]) count++;
-      const still = performance.now() - preview.movedAt > 300;
-      if (still && (usual || !count) && Math.abs(count - usual) > usual * 0.2 + 30 && odd < 4) {
+      const cells = Math.max(1, (only[2] - only[0]) * (only[3] - only[1]) * n);
+      const fill = count / cells;
+      if (usualModel !== studio.model) {
+        usualModel = studio.model;
+        usual = 0;
+      }
+      if (usual && Math.abs(fill - usual) > usual * 0.2 + 30 / cells && odd < 4) {
         odd++;
         return 'skip';
       }
       odd = 0;
-      if (count) usual = count;
+      if (count) usual = fill;
       for (let i = 0; i < n; i++) {
         pixels[i] = grid[i] && keep[i] ? 255 : 0;
         keep[i] *= 255;
@@ -408,15 +413,6 @@
       upload(UNITS.shadow, shade.canvas);
     }
 
-    const gameBox = (w: number, h: number): Rect | null => {
-      const [x0, y0, x1, y1] = preview.only;
-      if (!preview.hasBox || (x0 <= 0 && y0 <= 0 && x1 >= 1 && y1 >= 1)) return null;
-      const box = { x: x0 * w, y: y0 * h, w: (x1 - x0) * w, h: (y1 - y0) * h };
-      return box.w > 8 && box.h > 8 ? box : null;
-    };
-    const follow = (from: number, to: number, cell: number) =>
-      from + (to - from) * Math.max(0.12, Math.min(0.6, Math.abs(to - from) / (cell * 3)));
-
     const draw = () => {
       if (shot.shooting) {
         frame = requestAnimationFrame(draw);
@@ -459,42 +455,7 @@
 
       if (found) {
         looked = true;
-        const box = gameBox(w, h);
-
-        if (box) {
-          const seen = {
-            x: (found.x - box.x) / box.w,
-            y: (found.y - box.y) / box.h,
-            w: found.w / box.w,
-            h: found.h / box.h,
-          };
-
-          if (!inBox || inBoxModel !== studio.model) {
-            inBox = seen;
-            inBoxModel = studio.model;
-          } else {
-            const cell = MASK_W ? w / MASK_W / box.w : 0.01;
-            inBox = {
-              x: follow(inBox.x, seen.x, cell),
-              y: follow(inBox.y, seen.y, cell),
-              w: follow(inBox.w, seen.w, cell),
-              h: follow(inBox.h, seen.h, cell),
-            };
-          }
-
-          car = { x: box.x + inBox.x * box.w, y: box.y + inBox.y * box.h, w: inBox.w * box.w, h: inBox.h * box.h };
-        } else {
-          inBox = null;
-          const ease = car ? 0.65 : 1;
-          car = car
-            ? {
-                x: car.x + (found.x - car.x) * ease,
-                y: car.y + (found.y - car.y) * ease,
-                w: car.w + (found.w - car.w) * ease,
-                h: car.h + (found.h - car.h) * ease,
-              }
-            : found;
-        }
+        car = (preview.hasBox && boxRect(preview.only, w, h)) || found;
       }
 
       if (car) {

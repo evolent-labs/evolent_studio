@@ -370,17 +370,17 @@
       {#if shot.shooting}
         {@const taking = shot.shooting}
         <div class="shoot" style="left:{free.left}px;width:{free.right - free.left}px">
-          {#key taking.layer}{#if taking.layer <= 3}<i class="flash"></i>{/if}{/key}
+          {#key taking.layer}{#if taking.layer <= taking.steps}<i class="flash"></i>{/if}{/key}
           <div class="shootcard glass">
             <span class="lens"><Icon name="camera" /></span>
             <span class="shoottxt">
-              <b>{taking.layer > 3 ? 'Putting the photo together' : 'Taking the photo'}</b>
+              <b>{taking.layer > taking.steps ? 'Putting the photo together' : 'Taking the photo'}</b>
               <span>{fleet.nameOf(taking.model) || taking.model}</span>
             </span>
             <span class="steps">
-              {#each [1, 2, 3] as n (n)}<i class:done={n < taking.layer} class:now={n === taking.layer}></i>{/each}
+              {#each Array.from({ length: taking.steps }, (_, n) => n + 1) as n (n)}<i class:done={n < taking.layer} class:now={n === taking.layer}></i>{/each}
             </span>
-            <span class="what">{taking.layer > 3 ? 'Almost done' : `${taking.layer} of 3, ${LAYERS[taking.layer - 1]}`}</span>
+            <span class="what">{taking.layer > taking.steps ? 'Almost done' : `${taking.layer} of ${taking.steps}, ${LAYERS[taking.layer - 1]}`}</span>
           </div>
         </div>
       {/if}

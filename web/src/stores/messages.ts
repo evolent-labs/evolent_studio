@@ -45,7 +45,9 @@ const HANDLERS: { [Type in NuiMessage['type']]: (message: MessageOf<Type>) => vo
     session.open = false;
   },
   shooting(message) {
-    shot.shooting = message.on ? { layer: message.layer || 1, model: message.model || '' } : null;
+    shot.shooting = message.on
+      ? { layer: message.layer || 1, steps: message.steps || 3, model: message.model || '' }
+      : null;
   },
   vehicles(message) {
     fleet.list = message.list || [];

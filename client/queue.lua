@@ -26,6 +26,7 @@ function queue.view()
         total = active.total,
         current = active.current,
         layer = active.layer,
+        steps = active.steps,
         list = active.list,
         ok = active.ok,
         fail = active.fail,
@@ -71,8 +72,9 @@ local function biggestLayerKb(layers)
 end
 
 local function photograph(session, job, model)
-    local layers, problem = shoot.shoot(session, model, function(step)
+    local layers, problem = shoot.shoot(session, model, function(step, steps)
         job.layer = step
+        job.steps = steps
         sendToPage()
     end)
 

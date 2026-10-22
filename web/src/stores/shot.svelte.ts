@@ -8,7 +8,7 @@ class Shot {
   test = $state<Test | null>(null);
   testing = $state(false);
   testError = $state('');
-  shooting = $state<{ layer: number; model: string } | null>(null);
+  shooting = $state<{ layer: number; steps: number; model: string } | null>(null);
 
   clear() {
     this.test = null;

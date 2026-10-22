@@ -668,8 +668,17 @@ export const preview = {
   only: [0.4, 0.35, 0.6, 0.65],
   hasBox: false,
   foot: null as number[][] | null,
-  movedAt: 0,
 };
+
+export function boxRect(box: number[] | undefined, w: number, h: number): Rect | null {
+  if (!Array.isArray(box) || box.length !== 4) return null;
+
+  const [x0, y0, x1, y1] = box.map(Number);
+  if (x0 <= 0 && y0 <= 0 && x1 >= 1 && y1 >= 1) return null;
+
+  const rect = { x: x0 * w, y: y0 * h, w: (x1 - x0) * w, h: (y1 - y0) * h };
+  return rect.w > 8 && rect.h > 8 ? rect : null;
+}
 
 let work = { n: 0, label: new Int32Array(0), stack: new Int32Array(0), out: new Uint8Array(0) };
 
@@ -765,7 +774,6 @@ if (typeof window !== 'undefined') {
       preview.only = data.box.map(Number);
       preview.hasBox = true;
       preview.foot = Array.isArray(data.foot) && data.foot.length > 2 ? data.foot : null;
-      if (data.moved !== false) preview.movedAt = performance.now();
     }
   });
 }

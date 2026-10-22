@@ -11,11 +11,12 @@ local SCREENSHOT_TIMEOUT_MS = 15000
 local SCREENSHOT_RESOURCES = { 'screencapture', 'screenshot-basic' }
 
 local SHOTS = {
-    { key = 'black', primary = { 0, 0, 0 }, secondary = { 0, 0, 0 } },
-    { key = 'primary', primary = { 255, 255, 255 }, secondary = { 0, 0, 0 } },
-    { key = 'secondary', primary = { 0, 0, 0 }, secondary = { 255, 255, 255 } },
+    { key = 'black', primary = { 0, 0, 0 }, secondary = { 0, 0, 0 }, backdrop = 'black' },
+    { key = 'primary', primary = { 255, 255, 255 }, secondary = { 0, 0, 0 }, backdrop = 'black' },
+    { key = 'secondary', primary = { 0, 0, 0 }, secondary = { 255, 255, 255 }, backdrop = 'black' },
+    { key = 'white', primary = { 0, 0, 0 }, secondary = { 0, 0, 0 }, backdrop = 'white' },
 }
-local CUTTING_STEP = #SHOTS + 1
+local PAINT_SHOTS = 3
 
 ---The screenshot resource that is running, if any.
 ---@return string?
@@ -41,15 +42,18 @@ local function takeScreenshot(resource)
     return Citizen.Await(reply)
 end
 
-local function takeShots(session, vehicle, model, resource, onLayer)
+local function takeShots(session, vehicle, model, resource, steps, onLayer)
     local shots = {}
 
-    for step, shot in ipairs(SHOTS) do
+    for step = 1, steps do
+        local shot = SHOTS[step]
+
         if onLayer then
-            onLayer(step)
+            onLayer(step, steps)
         end
 
-        nui.send('shooting', { on = true, layer = step, model = model })
+        nui.send('shooting', { on = true, layer = step, steps = steps, model = model })
+        session.scene.backdrop = shot.backdrop
         SetVehicleCustomPrimaryColour(vehicle, shot.primary[1], shot.primary[2], shot.primary[3])
         SetVehicleCustomSecondaryColour(vehicle, shot.secondary[1], shot.secondary[2], shot.secondary[3])
         Wait(REPAINT_WAIT_MS)
@@ -79,7 +83,7 @@ end
 ---Spawns the model, takes the three shots and has the page cut them into layers.
 ---@param session StudioSession
 ---@param model string
----@param onLayer? fun(step: integer)
+---@param onLayer? fun(step: integer, steps: integer)
 ---@return table? layers
 ---@return string? problem
 function shoot.shoot(session, model, onLayer)
@@ -103,9 +107,12 @@ function shoot.shoot(session, model, onLayer)
         return nil, 'The menu was closed'
     end
 
+    local steps = studioSettings.isOnLocation(session.settings) and PAINT_SHOTS or #SHOTS
+
     session.isShooting = true
-    local shots, shotProblem = takeShots(session, vehicle, model, resource, onLayer)
+    local shots, shotProblem = takeShots(session, vehicle, model, resource, steps, onLayer)
     session.isShooting = false
+    session.scene.backdrop = 'green'
 
     if not shots then
         if not state.isStale(session) then
@@ -116,7 +123,7 @@ function shoot.shoot(session, model, onLayer)
     end
 
     car.paintPreview(session)
-    nui.send('shooting', { on = true, layer = CUTTING_STEP, model = model })
+    nui.send('shooting', { on = true, layer = steps + 1, steps = steps, model = model })
 
     local result = nui.requestFromPage({
         action = 'cut',

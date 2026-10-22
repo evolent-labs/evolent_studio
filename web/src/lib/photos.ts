@@ -1,12 +1,12 @@
 import { nui } from './nui';
 import {
+  boxRect,
   correct,
   corrected,
   drawBackground,
   drawImages,
   drawShadow,
   drawTexts,
-  edgeOf,
   fitScale,
   fontsFor,
   footLine,
@@ -26,6 +26,7 @@ import {
 
 export type Fix = { bright: number; contrast: number; saturation: number; warm: number };
 export type Layers = { black: string; primary: string; secondary: string; fix?: Fix };
+type Shots = Layers & { white?: string };
 
 const fixOf = (look?: Look): Fix | undefined => {
   if (!look || !corrected(look)) return undefined;
@@ -54,11 +55,6 @@ function pixels(image: HTMLImageElement, x = 0, y = 0, w = image.width, h = imag
   return { canvas, context, data: context.getImageData(0, 0, w, h) };
 }
 
-function coverage(r: number, g: number, b: number, lo = 24, hi = 80) {
-  const green = g - Math.max(r, b);
-  return green <= lo ? 1 : green >= hi ? 0 : 1 - (green - lo) / (hi - lo);
-}
-
 let lookOf: (model: string) => { look: Look; name: string } | null = () => null;
 
 export function useLook(fn: typeof lookOf) {
@@ -81,6 +77,7 @@ type Mask = {
   gridW: number;
   gridH: number;
   cellOf: (i: number) => number;
+  backdrop: number[];
 };
 type Layout = { frame: Rect; scale: number; outW: number; outH: number };
 type Scene = {
@@ -96,8 +93,74 @@ type Scene = {
 const GRID_W = 256;
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 
-function buildAlphaMask(shots: Uint8ClampedArray[], width: number, height: number, look?: Look): Mask {
-  const { lo, hi } = look ? edgeOf(look) : { lo: 24, hi: 80 };
+const SAMPLE_STEP = 7;
+const MIN_BACKDROP_CONTRAST = 0.3;
+const ALPHA_FLOOR = 0.04;
+const ALPHA_CEIL = 0.96;
+
+const lightOf = (data: Uint8ClampedArray, i: number) =>
+  toLinear[data[i * 4]] + toLinear[data[i * 4 + 1]] + toLinear[data[i * 4 + 2]];
+
+function backdropColour(data: Uint8ClampedArray, width: number, height: number, box?: number[]) {
+  const car = boxRect(box, width, height) ?? { x: width * 0.03, y: height * 0.03, w: width * 0.94, h: height * 0.94 };
+  const padX = width * 0.02;
+  const padY = height * 0.02;
+  const counts = [new Uint32Array(256), new Uint32Array(256), new Uint32Array(256)];
+  let total = 0;
+
+  for (let y = 0; y < height; y += SAMPLE_STEP) {
+    for (let x = 0; x < width; x += SAMPLE_STEP) {
+      const nearCar = x > car.x - padX && x < car.x + car.w + padX && y > car.y - padY && y < car.y + car.h + padY;
+      if (nearCar) continue;
+
+      const i = (y * width + x) * 4;
+      for (let n = 0; n < 3; n++) counts[n][data[i + n]]++;
+      total++;
+    }
+  }
+
+  if (!total) throw new Error('The backdrop could not be seen around the vehicle');
+
+  return counts.map((count) => {
+    let seen = 0;
+    let level = 0;
+    while (level < 255 && (seen += count[level]) * 2 < total) level++;
+    return toLinear[level];
+  });
+}
+
+function exposureChange(black: Uint8ClampedArray, white: Uint8ClampedArray, width: number, height: number, range: number) {
+  const solid = (i: number) => 1 - (lightOf(white, i) - lightOf(black, i)) / range > 0.7;
+  const ratios: number[] = [];
+
+  for (let y = 3; y < height - 3; y += SAMPLE_STEP) {
+    for (let x = 3; x < width - 3; x += SAMPLE_STEP) {
+      const i = y * width + x;
+      const lit = lightOf(black, i);
+      if (lit < 0.15) continue;
+      if (!solid(i) || !solid(i - 3) || !solid(i + 3) || !solid(i - 3 * width) || !solid(i + 3 * width)) continue;
+      ratios.push(lightOf(white, i) / lit);
+    }
+  }
+
+  if (ratios.length < 200) return 1;
+
+  ratios.sort((a, b) => a - b);
+  return clamp(ratios[ratios.length >> 1], 0.7, 1.4);
+}
+
+function buildMatte(black: Uint8ClampedArray, white: Uint8ClampedArray, width: number, height: number, box?: number[]): Mask {
+  const dark = backdropColour(black, width, height, box);
+  const light = backdropColour(white, width, height, box);
+  const darkSum = dark[0] + dark[1] + dark[2];
+  const lightSum = light[0] + light[1] + light[2];
+
+  if (lightSum - darkSum < MIN_BACKDROP_CONTRAST) {
+    throw new Error('The backdrop did not change colour, so the vehicle could not be cut out');
+  }
+
+  const exposure = exposureChange(black, white, width, height, lightSum - darkSum);
+  const range = lightSum - exposure * darkSum;
   const alpha = new Float32Array(width * height);
   const gridW = GRID_W;
   const gridH = Math.max(1, Math.round((gridW * height) / width));
@@ -109,18 +172,14 @@ function buildAlphaMask(shots: Uint8ClampedArray[], width: number, height: numbe
   };
 
   for (let i = 0; i < alpha.length; i++) {
-    let covered = 0;
-
-    for (let n = 0; n < shots.length; n++) {
-      const shot = shots[n];
-      covered = Math.max(covered, coverage(shot[i * 4], shot[i * 4 + 1], shot[i * 4 + 2], lo, hi));
-    }
+    const seen = 1 - (lightOf(white, i) - exposure * lightOf(black, i)) / range;
+    const covered = clamp((seen - ALPHA_FLOOR) / (ALPHA_CEIL - ALPHA_FLOOR), 0, 1);
 
     alpha[i] = covered;
     if (covered > 0.5) grid[cellOf(i)] = 1;
   }
 
-  return { alpha, width, height, grid, gridW, gridH, cellOf };
+  return { alpha, width, height, grid, gridW, gridH, cellOf, backdrop: dark };
 }
 
 function keepCarOnly(mask: Mask, box?: number[]) {
@@ -170,58 +229,40 @@ function layoutFor(car: Rect, look: Look | undefined, maxWidth: number): Layout 
   return { frame, scale, outW, outH };
 }
 
+function union(a: Rect, b: Rect): Rect {
+  const x = Math.min(a.x, b.x);
+  const y = Math.min(a.y, b.y);
+
+  return { x, y, w: Math.max(a.x + a.w, b.x + b.w) - x, h: Math.max(a.y + a.h, b.y + b.h) - y };
+}
+
 function cropAround(car: Rect, width: number, height: number): Rect {
   const pad = Math.round(Math.max(car.w, car.h) * 0.03);
-  const right = car.x + car.w - 1;
-  const bottom = car.y + car.h - 1;
-  const x = Math.max(0, car.x - pad);
-  const y = Math.max(0, car.y - pad);
+  const right = Math.ceil(car.x + car.w) - 1;
+  const bottom = Math.ceil(car.y + car.h) - 1;
+  const x = Math.max(0, Math.floor(car.x) - pad);
+  const y = Math.max(0, Math.floor(car.y) - pad);
 
   return { x, y, w: Math.min(width - 1, right + pad) - x + 1, h: Math.min(height - 1, bottom + pad) - y + 1 };
 }
 
-function despillEdges(image: HTMLImageElement, mask: Mask, crop: Rect) {
+function unmatte(image: HTMLImageElement, mask: Mask, crop: Rect) {
   const piece = pixels(image, crop.x, crop.y, crop.w, crop.h);
   const data = piece.data.data;
-
-  for (let i = 0; i < data.length; i += 4) {
-    const limit = Math.max(data[i], data[i + 2]);
-    if (data[i + 1] > limit) data[i + 1] = limit;
-  }
-
-  const source = data.slice();
-  const alphaAt = (x: number, y: number) => {
-    const atY = clamp(y + crop.y, 0, mask.height - 1);
-    const atX = clamp(x + crop.x, 0, mask.width - 1);
-    return mask.alpha[atY * mask.width + atX];
-  };
+  const behind = mask.backdrop;
 
   for (let y = 0; y < crop.h; y++) {
     for (let x = 0; x < crop.w; x++) {
       const i = (y * crop.w + x) * 4;
-      const alpha = alphaAt(x, y);
+      const alpha = mask.alpha[(y + crop.y) * mask.width + x + crop.x];
 
       if (alpha <= 0) {
         data[i + 3] = 0;
         continue;
       }
 
-      const slopeX = alphaAt(x + 2, y) - alphaAt(x - 2, y);
-      const slopeY = alphaAt(x, y + 2) - alphaAt(x, y - 2);
-      const steep = Math.hypot(slopeX, slopeY);
-
-      if (steep > 0.15) {
-        const innerX = clamp(Math.round(x + (slopeX / steep) * 3), 0, crop.w - 1);
-        const innerY = clamp(Math.round(y + (slopeY / steep) * 3), 0, crop.h - 1);
-
-        if (alphaAt(innerX, innerY) > alpha) {
-          const j = (innerY * crop.w + innerX) * 4;
-          for (let n = 0; n < 3; n++) data[i + n] = source[i + n] * 0.15 + source[j + n] * 0.85;
-        }
-      }
-
-      const edge = clamp((alpha - 0.15) / 0.7, 0, 1);
-      data[i + 3] = Math.round(edge * edge * (3 - 2 * edge) * 255);
+      for (let n = 0; n < 3; n++) data[i + n] = toSrgbFast((toLinear[data[i + n]] - (1 - alpha) * behind[n]) / alpha);
+      data[i + 3] = Math.round(alpha * 255);
     }
   }
 
@@ -366,30 +407,34 @@ async function composeOutput(cars: Surface[], look: Look, { car, layout, name, m
     const out = layer.context.createImageData(outW, outH);
     stackLayers(out.data, backPixels, stack);
     layer.context.putImageData(out, 0, 0);
-    return layer.canvas.toDataURL('image/webp', 0.9);
+    return layer.canvas.toDataURL('image/webp', 0.95);
   });
 }
 
-async function cut(shots: Layers, maxWidth: number, model: string, box?: number[], foot?: number[][]): Promise<Layers> {
+async function cut(shots: Shots, maxWidth: number, model: string, box?: number[], foot?: number[][]): Promise<Layers> {
+  if (!shots.white) throw new Error('The white backdrop shot is missing');
+
   const images = await Promise.all(KEYS.map((key) => load(shots[key])));
+  const white = await load(shots.white);
   const width = images[0].width;
   const height = images[0].height;
   const chosen = lookOf(model);
   const look = chosen?.look;
 
-  const mask = buildAlphaMask(images.map((image) => pixels(image).data.data), width, height, look);
+  const mask = buildMatte(pixels(images[0]).data.data, pixels(white).data.data, width, height, box);
   keepCarOnly(mask, box);
 
-  const car = findCarBounds(mask);
+  const seen = findCarBounds(mask);
+  const car = boxRect(box, width, height) ?? seen;
   const layout = layoutFor(car, look, maxWidth);
-  const crop = cropAround(car, width, height);
-  const cars = images.map((image) => scaleIntoFrame(despillEdges(image, mask, crop), crop, layout));
+  const crop = cropAround(union(car, seen), width, height);
+  const cars = images.map((image) => scaleIntoFrame(unmatte(image, mask, crop), crop, layout));
 
   const result = {} as Layers;
   result.fix = fixOf(look);
 
   const webps = !look || plain(look)
-    ? cars.map((layer) => layer.canvas.toDataURL('image/webp', 0.9))
+    ? cars.map((layer) => layer.canvas.toDataURL('image/webp', 0.95))
     : await composeOutput(cars, look, { car, layout, name: chosen?.name || model, model, foot, width, height });
 
   webps.forEach((webp, n) => (result[KEYS[n]] = webp));
@@ -434,7 +479,7 @@ async function keep(shots: Layers, maxWidth: number, model: string): Promise<Lay
 
   canvases.forEach((layer, n) => {
     layer.context.putImageData(layer.data, 0, 0);
-    out[KEYS[n]] = layer.canvas.toDataURL('image/webp', 0.88);
+    out[KEYS[n]] = layer.canvas.toDataURL('image/webp', 0.92);
   });
 
   return out;

@@ -32,6 +32,7 @@ export type Queue = {
   total: number;
   current?: string;
   layer: number;
+  steps?: number;
   list: string[];
   ok: number;
   fail: number;

@@ -10,7 +10,7 @@ local shoot = require 'client.shoot'
 local state = require 'client.state'
 local util = require 'shared.util'
 
-local GREEN_BOX_HALF_SIZE = 80.0
+local BACKDROP_HALF_SIZE = 80.0
 local CLEAR_RADIUS = 80.0
 local HIDDEN_REFRESH_MS = 250
 local WORLD_REFRESH_MS = 1000
@@ -19,7 +19,8 @@ local PLACE_LOAD_TIMEOUT_MS = 5000
 local COLLISION_TIMEOUT_MS = 5000
 local PANEL_OFFSET = { x = 0.288, y = 0.0, scale = 1.7 }
 local WORLD_KEYS = { 'hour', 'weather', 'place', 'filter', 'filterPower', 'sky', 'sun', 'shine', 'sunPower' }
-local GREEN_BOX_FACES = {
+local BACKDROP_COLOURS = { green = { 0, 255, 0 }, black = { 0, 0, 0 }, white = { 255, 255, 255 } }
+local BACKDROP_FACES = {
     { 1, 2, 3, 4 },
     { 5, 6, 7, 8 },
     { 1, 2, 6, 5 },
@@ -65,7 +66,6 @@ local function newSession(data, ped)
             hasDof = false,
             box = nil,
             footprint = nil,
-            movedBox = nil,
             boxSentAt = 0,
         },
         scene = {
@@ -78,6 +78,7 @@ local function newSession(data, ped)
             },
             spot = nil,
             turned = 0.0,
+            backdrop = 'green',
             interior = nil,
             floor = nil,
             isSpawningFloor = false,
@@ -98,8 +99,9 @@ local function newSession(data, ped)
     }
 end
 
-local function drawGreenBox(centre)
-    local half = GREEN_BOX_HALF_SIZE
+local function drawBackdrop(centre, colour)
+    local half = BACKDROP_HALF_SIZE
+    local r, g, b = colour[1], colour[2], colour[3]
     local corners = {
         centre + vector3(-half, -half, -half), centre + vector3(half, -half, -half),
         centre + vector3(half, half, -half), centre + vector3(-half, half, -half),
@@ -107,13 +109,13 @@ local function drawGreenBox(centre)
         centre + vector3(half, half, half), centre + vector3(-half, half, half),
     }
 
-    for _, face in ipairs(GREEN_BOX_FACES) do
-        local a, b, c, d = corners[face[1]], corners[face[2]], corners[face[3]], corners[face[4]]
+    for _, face in ipairs(BACKDROP_FACES) do
+        local p, q, s, t = corners[face[1]], corners[face[2]], corners[face[3]], corners[face[4]]
 
-        DrawPoly(a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z, 0, 255, 0, 255)
-        DrawPoly(a.x, a.y, a.z, c.x, c.y, c.z, d.x, d.y, d.z, 0, 255, 0, 255)
-        DrawPoly(c.x, c.y, c.z, b.x, b.y, b.z, a.x, a.y, a.z, 0, 255, 0, 255)
-        DrawPoly(d.x, d.y, d.z, c.x, c.y, c.z, a.x, a.y, a.z, 0, 255, 0, 255)
+        DrawPoly(p.x, p.y, p.z, q.x, q.y, q.z, s.x, s.y, s.z, r, g, b, 255)
+        DrawPoly(p.x, p.y, p.z, s.x, s.y, s.z, t.x, t.y, t.z, r, g, b, 255)
+        DrawPoly(s.x, s.y, s.z, q.x, q.y, q.z, p.x, p.y, p.z, r, g, b, 255)
+        DrawPoly(t.x, t.y, t.z, s.x, s.y, s.z, p.x, p.y, p.z, r, g, b, 255)
     end
 end
 
@@ -244,7 +246,7 @@ local function runFrameLoop(session)
             clearLocation(session, at)
             RequestCollisionAtCoord(at.x, at.y, at.z)
         else
-            drawGreenBox(session.scene.studioCentre)
+            drawBackdrop(session.scene.studioCentre, BACKDROP_COLOURS[session.scene.backdrop])
         end
 
         if GetGameTimer() > nextWorldRefresh then
@@ -275,6 +277,10 @@ local function runFrameLoop(session)
 
             if not isDragging or session.isShooting then
                 local from, target, fov = camera.frame(session, smoothing)
+
+                if session.isShooting and not isOnLocation then
+                    fov = camera.fillScreen(session, from, target, fov)
+                end
 
                 SetCamCoord(handle, from.x, from.y, from.z)
                 PointCamAtCoord(handle, target.x, target.y, target.z)

@@ -12,7 +12,8 @@ local BEHIND_CAMERA = 0.05
 local BOX_MARGIN = 0.01
 local BOX_RESEND_MS = 500
 local BOX_CHANGED = 0.00002
-local BOX_MOVED = 0.001
+local CAPTURE_FILL = 0.9
+local MIN_FOV = 1.0
 local FOOT_WIDTH = 0.94
 local FOOT_CORNER_SHARE = 0.15
 local FOOT_CORNER_MAX = 0.3
@@ -303,25 +304,48 @@ function camera.projectCar(session, from, to, fov)
     return box, projectFootprint(session, basis)
 end
 
+---The narrower field of view that makes the car fill the screen, so a photo gets as many pixels of it as it can.
+---@param session StudioSession
+---@param from vector3
+---@param to vector3
+---@param fov number
+---@return number
+function camera.fillScreen(session, from, to, fov)
+    local basis = screenBasis(from, to, fov)
+
+    if not basis then
+        return fov
+    end
+
+    local box = projectModelBox(session.car, basis)
+
+    if box == WHOLE_SCREEN then
+        return fov
+    end
+
+    local reach = math.max(0.5 - box[1], 0.5 - box[2], box[3] - 0.5, box[4] - 0.5)
+    local zoom = reach / (CAPTURE_FILL / 2)
+
+    if zoom >= 1.0 then
+        return fov
+    end
+
+    return math.max(MIN_FOV, math.deg(2.0 * math.atan(zoom * math.tan(math.rad(fov / 2)))))
+end
+
 function camera.sendBox(session, box, footprint)
     local cameraState = session.camera
     local hasChanged = cameraState.box == nil
-    local hasMoved = cameraState.movedBox == nil
 
     for i = 1, 4 do
         hasChanged = hasChanged or math.abs(cameraState.box[i] - box[i]) > BOX_CHANGED
-        hasMoved = hasMoved or math.abs(cameraState.movedBox[i] - box[i]) > BOX_MOVED
-    end
-
-    if hasMoved then
-        cameraState.movedBox = box
     end
 
     if hasChanged or GetGameTimer() > cameraState.boxSentAt then
         cameraState.box = box
         cameraState.footprint = footprint
         cameraState.boxSentAt = GetGameTimer() + BOX_RESEND_MS
-        nui.send('carbox', { box = box, foot = footprint, moved = hasMoved })
+        nui.send('carbox', { box = box, foot = footprint })
     end
 end
 

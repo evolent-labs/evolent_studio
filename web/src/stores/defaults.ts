@@ -9,7 +9,7 @@ export const ANGLES = [
   ['rear', 'Rear', 180, 4],
   ['high', 'High', 35, 35],
 ] as const;
-export const LAYERS = ['Black', 'White primary', 'White secondary'];
+export const LAYERS = ['Black', 'White primary', 'White secondary', 'White backdrop'];
 export const SWATCHES = ['#e11d2a', '#f4f4f5', '#16161a', '#1d4ed8', '#f59e0b', '#15803d', '#7c3aed', '#9ca3af'];
 
 export const DEFAULTS: Settings = {
