@@ -369,7 +369,7 @@
       {#if inStudio}<Stage {zoom} left={free.left} right={free.right} />{/if}
       {#if shot.shooting}
         {@const taking = shot.shooting}
-        <div class="shoot" style="left:{free.left}px;width:{free.right - free.left}px">
+        <div class="shoot" class:below={inStudio && !session.closed} style="left:{free.left}px;width:{free.right - free.left}px">
           {#key taking.layer}{#if taking.layer <= taking.steps}<i class="flash"></i>{/if}{/key}
           <div class="shootcard glass">
             <span class="lens"><Icon name="camera" /></span>
