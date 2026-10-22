@@ -1,0 +1,251 @@
+.gtop {
+  padding: 16px 22px 0;
+}
+
+.colours {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 22px;
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: var(--base-200);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+}
+
+.colours .grp {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.colours .grp>span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.colours .sw {
+  display: flex;
+  gap: 6px;
+}
+
+.colours .sw button {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  outline-offset: 2px;
+}
+
+.colours .sw button.on {
+  outline: 2px solid var(--text);
+}
+
+.meta {
+  display: flex;
+  justify-content: space-between;
+  margin: 12px 0 10px;
+  color: var(--dim);
+  font: 500 10.5px/1.4 var(--mono);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.gscroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 22px 20px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.photo {
+  display: block;
+  padding: 0;
+  background: var(--base-200);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  text-align: left;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.photo:hover {
+  border-color: var(--border-hover);
+}
+
+.photo .well {
+  position: relative;
+  display: block;
+  height: 96px;
+  margin: 6px 6px 0;
+  border-radius: var(--radius);
+  background: var(--base-100);
+}
+
+.photo .well img {
+  position: absolute;
+  left: 8%;
+  width: 84%;
+  top: 10px;
+  height: 76px;
+  object-fit: contain;
+}
+
+.photo .txt {
+  display: block;
+  padding: 10px 12px 12px;
+}
+
+.photo .txt b {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.photo .mini {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.photo .mini span {
+  padding: 1px 6px;
+  background: var(--base-300);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  font: 500 10px/1.5 var(--mono);
+}
+
+.photo .mini span:first-child {
+  color: var(--text);
+}
+
+.back {
+  padding: 0 12px 0 8px;
+}
+
+.dgrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 18px;
+  margin-top: 14px;
+}
+
+.bigimg {
+  position: relative;
+  height: 226px;
+  background: var(--base-200);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
+
+.bigimg img {
+  position: absolute;
+  left: 6%;
+  width: 88%;
+  top: 23px;
+  height: 181px;
+  object-fit: contain;
+}
+
+.dinfo {
+  min-width: 0;
+}
+
+.dinfo h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.dinfo .chips {
+  margin-top: 10px;
+}
+
+.chip.dim2 {
+  color: var(--muted);
+}
+
+.acts {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.act {
+  flex: 1;
+  min-height: 38px;
+}
+
+.act.del {
+  border-color: var(--danger-line);
+  color: var(--error);
+}
+
+.act.del:hover:not(:disabled) {
+  border-color: var(--error);
+}
+
+.sure {
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: var(--error-bg);
+  border: 1px solid var(--error-line);
+  border-radius: var(--radius-card);
+}
+
+.sure b {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.sure p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.sure .acts {
+  margin-top: 12px;
+}
+
+.sure .cancel {
+  flex: 1;
+  min-height: 36px;
+  background: var(--base-100);
+}
+
+.sure .kill {
+  flex: 1;
+  min-height: 36px;
+  background: var(--error);
+  border: 1px solid var(--error);
+  border-radius: var(--radius);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.sure .kill:hover {
+  filter: brightness(1.08);
+}

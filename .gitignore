@@ -1,0 +1,6 @@
+web/node_modules/
+web/build/
+images/*
+!images/README.txt
+photos/*
+!photos/readme.txt

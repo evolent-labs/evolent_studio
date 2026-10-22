@@ -1,0 +1,364 @@
+.second,
+.act,
+.qbtn,
+.back,
+.retry,
+.reset,
+.addbtn,
+.dashed,
+.empty button,
+.none button,
+.first button,
+.sure .cancel,
+.pickfoot .done,
+.dialog button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 12px;
+  background: var(--base-200);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.second:hover:not(:disabled),
+.act:hover:not(:disabled),
+.qbtn:hover:not(:disabled),
+.back:hover,
+.retry:hover,
+.addbtn:hover,
+.dashed:hover,
+.empty button:hover,
+.none button:hover,
+.first button:hover,
+.sure .cancel:hover,
+.pickfoot .done:hover,
+.dialog button:hover {
+  border-color: var(--ac);
+}
+
+.second:disabled,
+.act:disabled,
+.qbtn:disabled {
+  opacity: 0.45;
+}
+
+.second svg,
+.act svg,
+.back svg,
+.addbtn svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 1.75;
+}
+
+.reset {
+  margin-right: auto;
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted);
+}
+
+.reset:hover {
+  color: var(--text);
+  background: var(--hover);
+  border-color: transparent;
+}
+
+.accent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--acs);
+  border: 1px solid var(--acb);
+  border-radius: var(--radius);
+  color: var(--ac);
+  font-weight: 600;
+}
+
+.accent:hover:not(:disabled) {
+  background: var(--ac);
+  border-color: var(--ac);
+  color: var(--acfg);
+}
+
+.accent:disabled {
+  opacity: 0.35;
+}
+
+.sq {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  padding: 0;
+  background: var(--base-100);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  color: var(--muted);
+}
+
+.sq:hover {
+  color: var(--text);
+  border-color: var(--ac);
+}
+
+.sq.stop:hover {
+  border-color: var(--error);
+  color: var(--error);
+}
+
+.sq svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 1.75;
+}
+
+.sq.stop svg {
+  width: 12px;
+  height: 12px;
+}
+
+.leye.sure,
+.sq.stop.sure {
+  background: var(--error-bg);
+  border-color: var(--error-line);
+  color: var(--error-text);
+}
+
+.search {
+  position: relative;
+}
+
+.search svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  margin-top: -7px;
+  stroke: var(--dim);
+  stroke-width: 1.75;
+  pointer-events: none;
+}
+
+.search input,
+.addon input,
+.saveplace input,
+.platerow input,
+.carpick input,
+.linkrow input,
+.tline input,
+.pickfoot input,
+.typing {
+  height: 34px;
+  padding: 0 12px;
+  background: var(--base-200);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 500;
+  transition: border-color 0.16s;
+}
+
+.search input {
+  display: block;
+  width: 100%;
+  padding-left: 34px;
+}
+
+.search input:hover,
+.addon input:hover,
+.saveplace input:hover,
+.platerow input:hover,
+.carpick input:hover,
+.tline input:hover,
+.pickfoot input:hover {
+  border-color: var(--border-hover);
+}
+
+.search input:focus,
+.addon input:focus,
+.saveplace input:focus,
+.platerow input:focus,
+.carpick input:focus,
+.linkrow input:focus,
+.tline input:focus,
+.pickfoot input:focus {
+  border-color: var(--ac);
+  outline: 0;
+}
+
+.box {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  border: 1.5px solid var(--border-hover);
+  border-radius: 5px;
+  background: transparent;
+}
+
+.box.on {
+  border-color: var(--ac);
+  background: var(--ac);
+}
+
+.box svg {
+  width: 11px;
+  height: 11px;
+  stroke: var(--acfg);
+  stroke-width: 2.6;
+}
+
+.tag,
+.code,
+.chip,
+.okchip,
+.failchip,
+.next .q {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  padding: 2px 8px;
+  background: var(--base-300);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.code,
+.chip.num,
+.okchip,
+.failchip {
+  font-family: var(--mono);
+  font-size: 10.5px;
+}
+
+.tag.ready,
+.okchip,
+.chip.ok {
+  background: var(--acs);
+  border-color: var(--acb);
+  color: var(--ac);
+}
+
+.tag.failed,
+.failchip,
+.chip.redtext {
+  background: var(--error-bg);
+  border-color: var(--error-line);
+  color: var(--error);
+}
+
+.tag.queued,
+.next .q {
+  border-color: var(--acb);
+  color: var(--ac);
+}
+
+.tag.shooting {
+  background: var(--ac);
+  border-color: var(--ac);
+  color: var(--acfg);
+  font-weight: 600;
+}
+
+.chip.state.over {
+  background: var(--error);
+  border-color: var(--error);
+  color: #fff;
+  font-weight: 600;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.bar,
+.upbar {
+  flex: 1;
+  height: 4px;
+  background: var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.bar i,
+.upbar i {
+  display: block;
+  height: 100%;
+  border-radius: 6px;
+  background: var(--ac);
+  transition: width 0.3s;
+}
+
+.bar.paused i {
+  background: var(--dim);
+}
+
+.opt,
+.seg button,
+.chipbtn,
+.carhit {
+  min-height: 32px;
+  padding: 0 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: var(--base-200);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.opt:hover:not(:disabled),
+.seg button:hover:not(.on),
+.chipbtn:hover,
+.carhit:hover {
+  border-color: var(--ac);
+}
+
+.opt.on,
+.seg button.on {
+  background: var(--acs);
+  border-color: var(--acx);
+  color: var(--ac);
+  font-weight: 600;
+}
+
+.opt:disabled {
+  opacity: 0.35;
+}
+
+.quiet {
+  margin: 8px 0 0;
+  color: var(--dim);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.quiet.red,
+.red {
+  color: var(--error-text);
+}

@@ -1,0 +1,66 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Build the menu
+        working-directory: web
+        run: |
+          bun install --frozen-lockfile
+          bun run build
+
+      - name: Write the changelog
+        run: |
+          previous=$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || true)
+
+          if [ -n "$previous" ]; then
+            range="${previous}..${GITHUB_REF_NAME}"
+          else
+            range="${GITHUB_REF_NAME}"
+          fi
+
+          {
+            echo "## Changes"
+            echo
+            git log "$range" --no-merges --pretty=format:'- %s (%h)'
+            echo
+
+            if [ -n "$previous" ]; then
+              echo
+              echo "**Full changelog**: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/compare/${previous}...${GITHUB_REF_NAME}"
+            fi
+          } > CHANGELOG.md
+
+      - name: Package the resource
+        run: |
+          name=evolent_studio
+          mkdir -p "package/$name"
+          git archive "$GITHUB_REF_NAME" | tar -x -C "package/$name"
+          rm -rf "package/$name/.github" "package/$name/web"
+          mkdir -p "package/$name/web"
+          cp -r web/build "package/$name/web/build"
+          (cd package && zip -qr "../$name.zip" "$name")
+
+      - name: Publish the release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: CHANGELOG.md
+          files: '*.zip'
