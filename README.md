@@ -35,7 +35,7 @@ Get the latest version from [Releases](https://github.com/evolent-labs/evolent_s
 
 ## Documentation
 
-Installation, configuration and exports are covered in the [Evolent Studio documentation]().
+Installation, configuration and exports are covered in the [Evolent Studio documentation](https://docs.evolent.dev/studio).
 
 ## Discord
 
