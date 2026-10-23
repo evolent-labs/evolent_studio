@@ -128,7 +128,7 @@
             {:else}
               <span class="quiet">No link yet.</span>
             {/if}
-            <button type="button" class="second" disabled={busy || !uploads.config.hasToken} title={uploads.config.hasToken ? '' : 'Add the key in Settings'}
+            <button type="button" class="second" disabled={busy || !uploads.config.hasToken} title={uploads.config.hasToken ? '' : 'Set the key in server.cfg'}
               onclick={() => saveLink(photo.id)}>{busy ? 'Saving' : photo.url ? 'Save again' : 'Save a link'}</button>
           </div>
           {#if uploads.error}<p class="quiet red">{uploads.error}</p>{/if}

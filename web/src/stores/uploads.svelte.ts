@@ -27,9 +27,8 @@ class Uploads {
     if (config && typeof config === 'object') this.config = config as Upload;
   }
 
-  set(patch: Partial<Upload> & { token?: string; clearToken?: boolean }) {
-    const { token, clearToken, ...shown } = patch;
-    this.config = { ...this.config, ...shown };
+  set(patch: Partial<Upload>) {
+    this.config = { ...this.config, ...patch };
     this.error = '';
     nui('uploadSettings', patch);
   }

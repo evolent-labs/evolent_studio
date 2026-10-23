@@ -51,26 +51,6 @@ local function imageBytes(dataUrl)
     return decodeBase64(dataUrl:match(',(.*)$'))
 end
 
-local function keyOf(service)
-    if not NEEDS_KEY[service] then
-        return '', false
-    end
-
-    local fromConvar = GetConvar('evolent_studio:' .. service, '')
-
-    if fromConvar ~= '' then
-        return fromConvar, true
-    end
-
-    local stored = GetResourceKvpString('upload_token_' .. service)
-
-    if not stored and service == 'fivemanage' then
-        stored = GetResourceKvpString('upload_token')
-    end
-
-    return stored or '', false
-end
-
 local function isDiscordWebhook(link)
     local host, path = link:match('^https://([%a%.]+)(/api/webhooks/%d+/[%w_%-]+)$')
 
@@ -91,12 +71,32 @@ local function isUsableKey(service, key)
     return service ~= 'discord' or isDiscordWebhook(key)
 end
 
+local function keyConvar(service)
+    return (GetConvar('evolent_studio:' .. service, ''):gsub('%s', ''))
+end
+
+local function keyOf(service)
+    if not NEEDS_KEY[service] then
+        return ''
+    end
+
+    local key = keyConvar(service)
+
+    return isUsableKey(service, key) and key or ''
+end
+
+for service in pairs(NEEDS_KEY) do
+    if keyConvar(service) ~= '' and keyOf(service) == '' then
+        lib.print.warn(('evolent_studio:%s in server.cfg is not a valid %s key'):format(service, SERVICE_NAMES[service]))
+    end
+end
+
 ---The upload settings as the menu shows them; the key itself is never sent.
 ---@return table
 function uploads.view()
     local saved = kvp.load('upload')
     local service = SERVICES[saved.service] and saved.service or 'off'
-    local key, isFromConvar = keyOf(service)
+    local key = keyOf(service)
 
     return {
         service = service,
@@ -106,28 +106,7 @@ function uploads.view()
         secondary = util.hexColour(saved.secondary, studioSettings.DEFAULT_SECONDARY),
         hasToken = key ~= '' or service == 'folder',
         tokenEnd = key ~= '' and key:sub(-4) or nil,
-        fixed = isFromConvar,
     }
-end
-
-local function saveKey(service, input)
-    if not NEEDS_KEY[service] then
-        return
-    end
-
-    if input.clearToken then
-        DeleteResourceKvp('upload_token_' .. service)
-
-        if service == 'fivemanage' then
-            DeleteResourceKvp('upload_token')
-        end
-    elseif type(input.token) == 'string' then
-        local key = input.token:gsub('%s', '')
-
-        if isUsableKey(service, key) then
-            SetResourceKvp('upload_token_' .. service, key)
-        end
-    end
 end
 
 ---@param input table
@@ -147,8 +126,6 @@ function uploads.saveSettings(input)
         primary = util.hexColour(input.primary, current.primary),
         secondary = util.hexColour(input.secondary, current.secondary),
     })
-
-    saveKey(service, input)
 end
 
 local function failureText(service, status, reply)
@@ -256,7 +233,7 @@ function uploads.send(model, dataUrl, done)
     local key = keyOf(service)
 
     if not send or (NEEDS_KEY[service] and key == '') then
-        return done(nil, 'Pick where to save and add its key in Settings')
+        return done(nil, 'Pick where to save in Settings and set its key in server.cfg')
     end
 
     send(model, dataUrl, extension, key, done)

@@ -10,7 +10,6 @@ export type Upload = {
   secondary: string;
   hasToken: boolean;
   tokenEnd?: string;
-  fixed?: boolean;
 };
 export type Layer = 'photo' | 'camera' | 'light' | 'car' | 'floor' | 'bg' | `text${number}` | `img${number}`;
 export type Style = { id: string; name: string; settings: Partial<Settings> };

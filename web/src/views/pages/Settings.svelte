@@ -10,40 +10,32 @@
   const on = $derived(config.service !== 'off');
   const ready = $derived(on && config.hasToken);
   const linked = $derived(fleet.photos.filter((photo) => photo.url).length);
-  let token = $state('');
   const PLACES: [typeof config.service, string][] = [
     ['off', 'Nowhere'],
     ['fivemanage', 'Fivemanage'],
     ['discord', 'Discord'],
     ['folder', 'Server folder'],
   ];
-  const KEYS: Record<string, { label: string; hint: string; help: string; cfg: string }> = {
+  const KEYS: Record<string, { label: string; line: string; help: string }> = {
     fivemanage: {
       label: 'API token',
-      hint: 'Paste the token from fivemanage.com',
-      cfg: 'evolent_studio:fivemanage',
-      help: 'On fivemanage.com open your dashboard, make a token for images and paste it here.',
+      line: 'set evolent_studio:fivemanage "your-token"',
+      help: 'On fivemanage.com open your dashboard and make a token for images.',
     },
     discord: {
       label: 'Webhook link',
-      hint: 'https://discord.com/api/webhooks/...',
-      cfg: 'evolent_studio:discord',
+      line: 'set evolent_studio:discord "https://discord.com/api/webhooks/..."',
       help: 'In Discord open the channel settings, Integrations, Webhooks, make one and copy its link.',
     },
   };
-  const WEBHOOK = /^https:\/\/([a-z]+\.)?discord(app)?\.com\/api\/webhooks\/\d+\/[\w-]+$/;
   const key = $derived(KEYS[config.service]);
-  const fits = $derived(token.trim().length >= 8 && (config.service !== 'discord' || WEBHOOK.test(token.trim())));
   let copied = $state(false);
+  let copiedLine = $state(false);
 
-  function pickService(service: typeof config.service) {
-    token = '';
-    uploads.set({ service });
-  }
-
-  function saveToken() {
-    uploads.set({ token: token.trim() });
-    token = '';
+  function copyLine() {
+    toClipboard(key.line);
+    copiedLine = true;
+    setTimeout(() => (copiedLine = false), 1500);
   }
 
   function copyAll() {
@@ -69,7 +61,7 @@
     <span class="plab">Save to</span>
     <div class="opts two">
       {#each PLACES as [id, label] (id)}
-        <button type="button" class="opt" class:on={config.service === id} onclick={() => pickService(id)}>{label}</button>
+        <button type="button" class="opt" class:on={config.service === id} onclick={() => uploads.set({ service: id })}>{label}</button>
       {/each}
     </div>
 
@@ -81,20 +73,14 @@
         <p class="quiet lead">Pictures go into the photos folder of this resource on the server, one file per model. No key is needed. Other pages can show a new file after the resource is restarted.</p>
       {:else}
       <span class="plab">{key.label}</span>
-      {#if config.fixed}
-        <p class="quiet lead">Set in server.cfg, it ends in {config.tokenEnd}. Change it there.</p>
-      {:else if config.hasToken}
-        <div class="tokenrow">
-          <span class="chip ok"><Icon name="check" />Saved, ends in {config.tokenEnd}</span>
-          <button type="button" class="second" onclick={() => uploads.set({ clearToken: true })}>Remove</button>
-        </div>
+      {#if config.hasToken}
+        <span class="chip ok keyset"><Icon name="check" />Set in server.cfg, ends in {config.tokenEnd}</span>
       {:else}
-        <div class="saveplace">
-          <input type="password" maxlength="200" placeholder={key.hint} autocomplete="off" bind:value={token}
-            onkeydown={(e) => { if (e.key === 'Enter' && fits) saveToken(); }} />
-          <button type="button" class="second" disabled={!fits} onclick={saveToken}>Save</button>
+        <p class="quiet lead">{key.help} Add it to server.cfg, then restart this resource.</p>
+        <div class="linkrow keyline">
+          <input readonly value={key.line} aria-label="server.cfg line" />
+          <button type="button" class="second" onclick={copyLine}>{copiedLine ? 'Copied' : 'Copy'}</button>
         </div>
-        <p class="quiet">{key.help} It is kept on the server and never shown again. Or put it in server.cfg: set {key.cfg} "..."</p>
       {/if}
       {/if}
 
