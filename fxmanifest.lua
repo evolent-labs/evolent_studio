@@ -4,7 +4,7 @@ lua54 'yes'
 game 'gta5'
 author 'Evolent'
 description 'Evolent Studio: Ingame Photos'
-version '0.4.1'
+version '1.0.0'
 
 dependencies {
     'ox_lib',
