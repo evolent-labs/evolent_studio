@@ -1,4 +1,4 @@
-local config = require 'shared.config'
+local config = require 'config'
 local net = require 'shared.net'
 local nui = require 'client.nui'
 local photos = require 'client.photos'

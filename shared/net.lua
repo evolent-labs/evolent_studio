@@ -1,4 +1,4 @@
-local config = require 'shared.config'
+local config = require 'config'
 local util = require 'shared.util'
 
 local net = {}

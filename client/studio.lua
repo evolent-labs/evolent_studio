@@ -1,6 +1,6 @@
 local camera = require 'client.camera'
 local car = require 'client.car'
-local config = require 'shared.config'
+local config = require 'config'
 local look = require 'client.look'
 local net = require 'shared.net'
 local nui = require 'client.nui'

@@ -1,5 +1,5 @@
 local catalog = require 'server.catalog'
-local config = require 'shared.config'
+local config = require 'config'
 local database = require 'server.database'
 local kvp = require 'server.kvp'
 local net = require 'shared.net'

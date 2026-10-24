@@ -1,5 +1,5 @@
 local camera = require 'client.camera'
-local config = require 'shared.config'
+local config = require 'config'
 local nui = require 'client.nui'
 local studioSettings = require 'shared.settings'
 local state = require 'client.state'
