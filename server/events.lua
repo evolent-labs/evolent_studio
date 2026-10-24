@@ -16,6 +16,8 @@ local MAX_UPLOAD_LENGTH = 3000000
 local RATE_WINDOW_MS = 10000
 local RATE_MAX_REQUESTS = 30
 local RATE_SAME_MODEL_MS = 60000
+local SEND_WINDOW_MS = 60000
+local MAX_SEND_BYTES = 30000000
 
 local function newId(prefix)
     return ('%s%d%d'):format(prefix, os.time(), math.random(100, 999))
@@ -384,6 +386,32 @@ local function isOverRateLimit(playerId, model)
     return false
 end
 
+local sendBudgets = {}
+
+local function canSend(playerId, layers)
+    local now = GetGameTimer()
+    local budget = sendBudgets[playerId]
+
+    if not budget or now - budget.startedAt > SEND_WINDOW_MS then
+        budget = { startedAt = now, sent = 0 }
+        sendBudgets[playerId] = budget
+    end
+
+    local bytes = 0
+
+    for _, key in ipairs(database.LAYER_KEYS) do
+        bytes += #layers[key]
+    end
+
+    if budget.sent > 0 and budget.sent + bytes > MAX_SEND_BYTES then
+        return false
+    end
+
+    budget.sent += bytes
+
+    return true
+end
+
 net.on('request', function(model)
     local playerId = source
     model = util.modelName(model)
@@ -396,7 +424,9 @@ net.on('request', function(model)
         net.send(playerId, 'layers', model, 0, false, true)
     end
 
-    if not net.isAdmin(playerId) and isOverRateLimit(playerId, model) then
+    local isAdmin = net.isAdmin(playerId)
+
+    if not isAdmin and isOverRateLimit(playerId, model) then
         return answerBusy()
     end
 
@@ -408,7 +438,7 @@ net.on('request', function(model)
     if version then
         layers = database.layersOf(model)
 
-        if layers == nil then
+        if layers == nil or (not isAdmin and not canSend(playerId, layers)) then
             return answerBusy()
         end
     end
@@ -419,6 +449,7 @@ end)
 AddEventHandler('playerDropped', function()
     playersHoldingWeather[source] = nil
     requestRateLimits[source] = nil
+    sendBudgets[source] = nil
 end)
 
 AddEventHandler('onResourceStop', function(name)
