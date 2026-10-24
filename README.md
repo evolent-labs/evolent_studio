@@ -6,6 +6,8 @@ A photo studio for FiveM. Admins take cut-out pictures of vehicles in game, and 
 
 Admins photograph each vehicle model once, and the photo shows every owner's own paint. Each car looks like the one the player owns, without a picture for every colour. Players never send pictures, so they cannot fake them, and every photo is the same quality.
 
+![The studio editor](.github/assets/studio.webp)
+
 ## What it's for
 
 Vanilla image packs leave out addon cars, show every car in one colour and come in mixed styles. Making pictures by hand takes a screenshot and an edit per model. The studio photographs every model in one queue run with the same camera, light and frame.
@@ -22,6 +24,19 @@ Vanilla image packs leave out addon cars, show every car in one colour and come 
 - A queue that photographs every vehicle on the server in one go.
 - Saved styles, so every photo for a garage, dealership or Discord looks the same.
 - Exports for other resources, and uploads to Fivemanage, Discord or the server folder.
+
+<table>
+  <tr>
+    <td width="33%"><img src=".github/assets/vehicles.webp" alt="Vehicle list"></td>
+    <td width="33%"><img src=".github/assets/gallery.webp" alt="Gallery"></td>
+    <td width="33%"><img src=".github/assets/queue.webp" alt="Queue"></td>
+  </tr>
+  <tr>
+    <td align="center">Every vehicle on the server</td>
+    <td align="center">The gallery, repainted live</td>
+    <td align="center">The queue at work</td>
+  </tr>
+</table>
 
 ## Requirements
 
