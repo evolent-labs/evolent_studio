@@ -359,7 +359,15 @@ local function isOverRateLimit(playerId, model)
     local window = requestRateLimits[playerId]
 
     if not window or now - window.startedAt > RATE_WINDOW_MS then
-        window = { startedAt = now, count = 0, askedAt = window?.askedAt or {} }
+        local askedAt = window?.askedAt or {}
+
+        for asked, at in pairs(askedAt) do
+            if now - at >= RATE_SAME_MODEL_MS then
+                askedAt[asked] = nil
+            end
+        end
+
+        window = { startedAt = now, count = 0, askedAt = askedAt }
         requestRateLimits[playerId] = window
     end
 

@@ -6,11 +6,6 @@ local database = {}
 local RETRY_MS = 5000
 local LAYER_CACHE_LIMIT = 20
 local LAYER_KEYS = { 'black', 'primary', 'secondary' }
-local LATER_COLUMNS = {
-    { name = 'size', definition = 'INT NOT NULL DEFAULT 0' },
-    { name = 'fix', definition = 'VARCHAR(120) NULL' },
-    { name = 'url', definition = 'VARCHAR(500) NULL' },
-}
 
 local versionOf = {}
 local urlOf = {}
@@ -25,20 +20,7 @@ local function rememberPhoto(model, version)
     modelOfHash[GetHashKey(model)] = model
 end
 
-local function tableExists(name)
-    local count = MySQL.scalar.await(
-        'SELECT COUNT(*) FROM `information_schema`.`TABLES` WHERE `TABLE_SCHEMA` = DATABASE() AND `TABLE_NAME` = ?',
-        { name }
-    )
-
-    return (count or 0) > 0
-end
-
-local function migrate()
-    if tableExists('evolent_vehicle_photos') and not tableExists('evolent_studio_photos') then
-        MySQL.query.await('RENAME TABLE `evolent_vehicle_photos` TO `evolent_studio_photos`')
-    end
-
+local function createTable()
     MySQL.query.await([[CREATE TABLE IF NOT EXISTS `evolent_studio_photos` (
         `model` VARCHAR(64) NOT NULL PRIMARY KEY,
         `black` MEDIUMTEXT NOT NULL,
@@ -49,25 +31,6 @@ local function migrate()
         `fix` VARCHAR(120) NULL,
         `url` VARCHAR(500) NULL
     )]])
-
-    local existing = {}
-    local columns = MySQL.query.await([[SELECT `COLUMN_NAME` AS `name` FROM `information_schema`.`COLUMNS`
-        WHERE `TABLE_SCHEMA` = DATABASE() AND `TABLE_NAME` = 'evolent_studio_photos']])
-
-    for _, column in ipairs(columns or {}) do
-        existing[column.name] = true
-    end
-
-    for _, column in ipairs(LATER_COLUMNS) do
-        if not existing[column.name] then
-            local sql = 'ALTER TABLE `evolent_studio_photos` ADD COLUMN `%s` %s'
-            MySQL.query.await(sql:format(column.name, column.definition))
-        end
-    end
-
-    MySQL.query.await('ALTER TABLE `evolent_studio_photos` MODIFY COLUMN `url` VARCHAR(500) NULL')
-    MySQL.query.await([[UPDATE `evolent_studio_photos` SET `size` = GREATEST(LENGTH(`black`), LENGTH(`primary_layer`),
-        LENGTH(`secondary_layer`)) WHERE `size` = 0]])
 end
 
 local function loadPhotoIndex()
@@ -82,7 +45,7 @@ end
 CreateThread(function()
     while true do
         local ok, problem = pcall(function()
-            migrate()
+            createTable()
             loadPhotoIndex()
         end)
 
