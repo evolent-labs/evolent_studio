@@ -112,7 +112,7 @@ function shoot.shoot(session, model, onLayer)
     session.isShooting = true
     local shots, shotProblem = takeShots(session, vehicle, model, resource, steps, onLayer)
     session.isShooting = false
-    session.scene.backdrop = 'green'
+    session.scene.backdrop = nil
 
     if not shots then
         if not state.isStale(session) then

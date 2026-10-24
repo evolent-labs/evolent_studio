@@ -76,7 +76,7 @@
     const x = session.closed || backdrop ? 0 : (centre - menuWidth / 2) / menuWidth;
     const fit = session.closed || backdrop ? 1 : Math.max(1, (0.72 * menuWidth) / (free.right - free.left));
     const scale = backdrop || inScene ? fit : fit * viewZoom;
-    nui('panel', { x, y: 0, scale });
+    nui('panel', { x, y: 0, scale, keyed: backdrop });
   });
 
   const inScene = $derived(studio.settings.place !== 'green');

@@ -19,7 +19,12 @@ local PLACE_LOAD_TIMEOUT_MS = 5000
 local COLLISION_TIMEOUT_MS = 5000
 local PANEL_OFFSET = { x = 0.288, y = 0.0, scale = 1.7 }
 local WORLD_KEYS = { 'hour', 'weather', 'place', 'filter', 'filterPower', 'sky', 'sun', 'shine', 'sunPower' }
-local BACKDROP_COLOURS = { green = { 0, 255, 0 }, black = { 0, 0, 0 }, white = { 255, 255, 255 } }
+local BACKDROP_COLOURS = {
+    green = { 0, 255, 0 },
+    dark = { 10, 10, 14 },
+    black = { 0, 0, 0 },
+    white = { 255, 255, 255 },
+}
 local BACKDROP_FACES = {
     { 1, 2, 3, 4 },
     { 5, 6, 7, 8 },
@@ -78,7 +83,8 @@ local function newSession(data, ped)
             },
             spot = nil,
             turned = 0.0,
-            backdrop = 'green',
+            backdrop = nil,
+            isKeyed = true,
             interior = nil,
             floor = nil,
             isSpawningFloor = false,
@@ -246,7 +252,8 @@ local function runFrameLoop(session)
             clearLocation(session, at)
             RequestCollisionAtCoord(at.x, at.y, at.z)
         else
-            drawBackdrop(session.scene.studioCentre, BACKDROP_COLOURS[session.scene.backdrop])
+            local backdrop = session.scene.backdrop or (session.scene.isKeyed and 'green' or 'dark')
+            drawBackdrop(session.scene.studioCentre, BACKDROP_COLOURS[backdrop])
         end
 
         if GetGameTimer() > nextWorldRefresh then
@@ -429,6 +436,7 @@ nui.on('close', function(data, cb)
 end)
 
 nui.onStudioAction('panel', function(session, data)
+    session.scene.isKeyed = data.keyed == true
     session.camera.panel = {
         x = util.clamp(data.x, -0.5, 0.5, 0.0, 0.001),
         y = util.clamp(data.y, -0.5, 0.5, 0.0, 0.001),
